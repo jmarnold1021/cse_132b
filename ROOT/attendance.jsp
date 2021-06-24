@@ -1,0 +1,252 @@
+<html>
+
+<body>
+  <table border="1">
+        <tr>
+            <td valign="top">
+                <%-- -------- Include menu HTML code -------- --%>
+                <jsp:include page="index.html" />
+            </td>
+            <td valign="top">
+            <h1>Add Attendance Info</h1>
+						
+
+            <%-- Set the scripting language to Java and --%>
+            <%-- Import the java.sql package --%>
+            <%@ page language="java" import="java.sql.*" %>
+    
+            <%-- -------- Open Connection Code -------- --%>
+            <%!        
+						     
+                    String jdbcDriver = "org.postgresql.Driver";
+                    String jdbcURL    = "jdbc:postgresql:testdb";
+                    String user       = "temp_user";
+                    String password   = "temp";
+					 %>
+
+            <%-- -------- INSERT Code -------- --%>
+            <%
+						 
+						    try {
+
+
+						        Class.forName(jdbcDriver).newInstance();
+                    Connection conn = DriverManager.getConnection(jdbcURL, user, password);
+
+                    String action = request.getParameter("action");
+                    // Check if an insertion is requested
+                    if (action != null && action.equals("insert")) {
+
+                        // Begin transaction
+                        conn.setAutoCommit(false);
+                        
+                        // Create the prepared statement and use it to
+                        // INSERT the student attributes INTO the Student table.
+                        PreparedStatement pstmt = conn.prepareStatement(
+                            "INSERT INTO AttendanceInfo VALUES (?,?,?,?,?)");
+
+                       pstmt.setInt(1, Integer.parseInt(request.getParameter("ID")));
+                       pstmt.setInt(2, Integer.parseInt(request.getParameter("YEAR")));
+											 
+                        pstmt.setString(3, request.getParameter("QTR"));
+												pstmt.setString(4, request.getParameter("STATUS"));
+                        pstmt.setString(5, request.getParameter("REASON"));
+                       												
+                        int rowCount = pstmt.executeUpdate();
+
+                        // Commit transaction
+                        conn.commit();
+                        conn.setAutoCommit(true);
+                    }
+            %>
+
+            <%-- -------- UPDATE Code -------- --%>
+            <%
+                    // Check if an update is requested
+                    if (action != null && action.equals("update")) {
+
+                        // Begin transaction
+                        conn.setAutoCommit(false);
+                        
+                        // Create the prepared statement and use it to
+                        // UPDATE the student attributes in the Student table.
+                        PreparedStatement pstmt = conn.prepareStatement(
+                            "UPDATE AttendanceInfo SET att_year = ?, att_qtr = ?, " +
+                            "status = ?, reason = ? WHERE id = ?");
+
+                       pstmt.setInt(5, Integer.parseInt(request.getParameter("ID")));
+                       pstmt.setInt(1, Integer.parseInt(request.getParameter("YEAR")));
+											 
+                        pstmt.setString(2, request.getParameter("QTR"));
+												pstmt.setString(3, request.getParameter("STATUS"));
+                        pstmt.setString(4, request.getParameter("REASON"));
+
+                        int rowCount = pstmt.executeUpdate();
+
+                        // Commit transaction
+                         conn.commit();
+                        conn.setAutoCommit(true);
+                    }
+            %>
+
+            <%-- -------- DELETE Code -------- --%>
+            <%
+                    // Check if a delete is requested
+                    if (action != null && action.equals("delete")) {
+
+                        // Begin transaction
+                        conn.setAutoCommit(false);
+                        
+                        // Create the prepared statement and use it to
+                        // DELETE the student FROM the Student table.
+
+
+                        PreparedStatement pstmt = conn.prepareStatement(
+                            "DELETE FROM AttendanceInfo WHERE id = ?");
+
+                        pstmt.setInt(
+                            1, Integer.parseInt(request.getParameter("ID")));
+                        int rowCount = pstmt.executeUpdate();
+
+                        // Commit transaction
+                         conn.commit();
+                        conn.setAutoCommit(true);
+                    }
+            %>
+
+            <%-- -------- SELECT Statement Code -------- --%>
+            <%
+                    // Create the statement
+                    Statement statement = conn.createStatement();
+
+                    // Use the created statement to SELECT
+                    // the student attributes FROM the Student table.
+                    ResultSet rs = statement.executeQuery
+                        ("SELECT * FROM AttendanceInfo");
+            %>
+
+            <!-- Add an HTML table header row to format the results -->
+                <table border="1">
+                    <tr>
+                        <th>ID</th>
+                        <th>YEAR</th>
+                        <th>QTR</th>
+		                  	<th>STATUS</th>
+                        <th>REASON</th>
+                        <th>Action</th>
+                    </tr>
+                    <tr>
+                        <form action="attendance.jsp" method="get">
+                            <input type="hidden" value="insert" name="action">
+                            <th><input value="" name="ID" size="10"> </th> 
+                            <th><input value="" name="YEAR" size="10"></th>
+                             <td>
+														    <select name="QTR">
+														    <option value="F">FALL(F)</option>
+														    <option value="W">WINTER(W)</option>
+														    <option value="S">SPRING(S)</option>
+														    <option value="S1">SUMMER1(S1)</option>
+														    <option value="S2">SUMMER2(S2)</option>
+																</select>
+                            </td>
+
+			                      <td><select name="STATUS">
+														    <option value="Good">Good</option>
+														    <option value="Probation">Probation</option>
+														   
+																</select>
+														</td>
+                            <th><input value="N/A" name="REASON" size="15"></th>
+                            <th><input type="submit" value="Insert"></th>
+                        </form>
+                    </tr>
+
+            <%-- -------- Iteration Code -------- --%>
+            <%
+                    // Iterate over the ResultSet
+        
+                    while ( rs.next() ) {
+        
+            %>
+
+                    <tr>
+                        <form action="attendance.jsp" method="get">
+                            <input type="hidden" value="update" name="action">
+
+                            <%-- Get the SSN, which is a number --%>
+                            <td>
+                                <input value="<%= rs.getInt("id") %>" 
+                                    name="ID" size="10" readonly>																
+														</td>
+														
+    
+                            <%-- Get the ID --%>
+                            <td>
+                                <input value="<%= rs.getInt("att_year") %>" 
+                                    name="YEAR" size="10">
+                            </td>
+    
+                            <%-- Get the FIRSTNAME --%>
+                            <td>
+                                <input value="<%= rs.getString("att_qtr") %>"
+                                    name="QTR" size="15">
+                            </td>
+    
+                            <%-- Get the LASTNAME --%>
+                            <td>
+                                <input value="<%= rs.getString("status") %>" 
+                                    name="STATUS" size="15">
+                            </td>
+    
+			    <%-- Get the LASTNAME --%>
+                            <td>
+                                <input value="<%= rs.getString("reason") %>" 
+                                    name="REASON" size="15">
+                            </td>
+
+														
+                            <%-- Get the COLLEGE --%>
+														
+    
+                            <%-- Button --%>
+                            <td>
+                                <input type="submit" value="Update">
+                            </td>
+                        </form>
+                        <form action="attendance.jsp" method="get">
+                            <input type="hidden" value="delete" name="action">
+                            <input type="hidden" 
+                                value="<%= rs.getInt("id") %>" name="ID">
+                            <%-- Button --%>
+                            <td>
+                                <input type="submit" value="Delete">
+                            </td>
+                        </form>
+                    </tr>
+            <%
+                    }
+            %>
+
+            <%-- -------- Close Connection Code -------- --%>
+            <%
+                    // Close the ResultSet
+                    rs.close();
+    
+                    // Close the Statement
+                    statement.close();
+    
+                    // Close the Connection
+                    conn.close();
+                } catch (SQLException sqle) {
+                    out.println(sqle.getMessage());
+                } catch (Exception e) {
+                    out.println(e.getMessage());
+                }
+            %>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>
